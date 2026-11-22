@@ -130,7 +130,7 @@ class HeyOkaWakeWordService : Service() {
     private fun isWakePhrase(resultJson: String): Boolean {
         val text = runCatching { JSONObject(resultJson).optString("text") }.getOrDefault("")
         val normalized = text.lowercase().replace(Regex("[^a-z ]"), " ").replace(Regex("\\s+"), " ").trim()
-        return normalized == "hey oka" || normalized == "hey okka"
+        return normalized in setOf("hey oka", "hey okay", "hey oh ka", "hey okka")
     }
 
     /**
@@ -255,7 +255,7 @@ class HeyOkaWakeWordService : Service() {
         private const val MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
         private const val SAMPLE_RATE = 16_000
         private const val BUFFER_SIZE = 4_096
-        private const val WAKE_GRAMMAR = """["hey oka"]"""
+        private const val WAKE_GRAMMAR = """["hey oka", "hey okay", "hey oh ka", "hey okka"]"""
         private const val CHANNEL_ID = "hey_oka_wake_word"
         private const val ALERT_CHANNEL_ID = "hey_oka_activation"
         private const val ONGOING_NOTIFICATION_ID = 7101
