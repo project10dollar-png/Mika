@@ -1,28 +1,26 @@
-# HEY OKA wake-word integration
+# HEY OKA offline voice activation
 
-This branch adds the Android Porcupine runtime and an explicit microphone foreground service. Wake-word detection is not active until the Picovoice model and AccessKey are supplied.
+This branch replaces the Picovoice/Porcupine dependency with Vosk Android. No Picovoice account, AccessKey, or custom `.ppn` file is required.
 
-## Required setup
+## How it works
 
-1. Create a custom **Hey Oka** keyword in [Picovoice Console](https://console.picovoice.ai/) and export the Android `.ppn` model.
-2. Place the model at `app/src/main/assets/hey_oka.ppn`.
-3. Supply the Picovoice AccessKey at build time using a local Gradle property:
+- The user explicitly starts the microphone foreground service from a visible Activity after granting microphone permission.
+- On first use, the app downloads the public `vosk-model-small-en-us-0.15` model (about 40 MB) from the Vosk model host and extracts it into app-private storage.
+- The phrase grammar is constrained to `hey oka`; subsequent recognition runs locally without internet.
+- When the phrase is recognized, listening stops and an Android notification offers to open HEY OKA.
+- A persistent notification includes a **Matikan** action. The service does not auto-start at boot.
 
-```properties
-PICOVOICE_ACCESS_KEY=your_access_key
-```
+## Important limitations
 
-Alternatively pass `-PPICOVOICE_ACCESS_KEY=...` to Gradle. In CI, use a protected GitHub Actions secret. Do not hard-code the key in source control.
+Vosk is offline speech recognition with grammar constraints, not a dedicated low-power wake-word detector. Continuous microphone capture can consume battery and may be less accurate at recognizing a short custom phrase such as “Hey Oka”. The initial model download requires internet; after successful download, recognition itself is offline.
 
-## Runtime contract
+The current service is a technical foundation. A user-facing settings toggle, direct handoff into the chat voice session, model download progress/retry UI, and real-device testing are still required before calling the feature production-ready.
 
-- The service never starts itself at boot.
-- Start it only from a visible Activity after the user explicitly opts in and grants `RECORD_AUDIO`.
-- Start: `HeyOkaWakeWordService.start(context)`.
+## Model and license
+
+The selected small US English model is listed by Vosk as a mobile model under Apache 2.0. The model is downloaded at runtime rather than checked into this repository. See https://alphacephei.com/vosk/models and https://alphacephei.com/vosk/android.
+
+## Runtime entry points
+
+- Start: `HeyOkaWakeWordService.start(context)`, only from a visible Activity after explicit user opt-in and `RECORD_AUDIO` permission.
 - Stop: `HeyOkaWakeWordService.stop(context)`.
-- A persistent notification is shown while listening; its **Matikan** action stops microphone capture.
-- When the wake word is detected, microphone capture stops and a notification lets the user open Oka. The existing speech-to-text session remains user-initiated.
-
-## Implementation status
-
-The Porcupine dependency, manifest declaration, microphone foreground-service lifecycle, notification controls, and build-time AccessKey configuration are committed. A user-facing settings toggle, automatic handoff into the existing chat speech session, model provisioning, and real-device testing remain outstanding. Do not advertise the feature as active until those steps are complete.
