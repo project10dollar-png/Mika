@@ -6,7 +6,7 @@ This branch replaces the Picovoice/Porcupine dependency with Vosk Android. No Pi
 
 - The user explicitly starts the microphone foreground service from a visible Activity after granting microphone permission.
 - On first use, the app downloads the public `vosk-model-small-en-us-0.15` model (about 40 MB) from the Vosk model host and extracts it into app-private storage.
-- The phrase grammar is constrained to `hey oka`; subsequent recognition runs locally without internet.
+- The phrase grammar is constrained to the English acoustic equivalent `hey okay` (the intended spoken trigger is “Hey Oka”); subsequent recognition runs locally without internet.
 - When the phrase is recognized, listening stops and an Android notification offers to open HEY OKA.
 - A persistent notification includes a **Matikan** action. The service does not auto-start at boot.
 
