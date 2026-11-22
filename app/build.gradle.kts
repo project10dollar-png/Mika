@@ -26,6 +26,8 @@ android {
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
         buildConfigField("boolean", "BETA", "true")
         buildConfigField("boolean", "ADB_LOGS", "false")
+        val picovoiceAccessKey = providers.gradleProperty("PICOVOICE_ACCESS_KEY").orElse("").get()
+        buildConfigField("String", "PICOVOICE_ACCESS_KEY", "\"${picovoiceAccessKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
     }
 
     // 沙箱程序只有 arm64 版本(jniLibs/arm64-v8a);APK 不限 ABI,别的设备照常安装、显示「此设备不支持沙箱」。
@@ -121,6 +123,7 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
+    implementation(libs.picovoice.porcupine)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
