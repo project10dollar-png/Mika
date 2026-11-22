@@ -70,6 +70,7 @@ class HeyOkaWakeWordService : Service() {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
         )
         running = true
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(PREF_ENABLED, true).apply()
         worker = Thread({ listenLoop(startId) }, "HeyOka-Vosk").apply { start() }
     }
 
@@ -236,6 +237,7 @@ class HeyOkaWakeWordService : Service() {
 
     private fun stopListening() {
         running = false
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(PREF_ENABLED, false).apply()
         runCatching { recorder?.stop() }
         worker?.interrupt()
         worker = null
@@ -250,6 +252,8 @@ class HeyOkaWakeWordService : Service() {
         const val ACTION_START = "com.wangzan101.mika.action.HEY_OKA_WAKE_START"
         const val ACTION_STOP = "com.wangzan101.mika.action.HEY_OKA_WAKE_STOP"
         const val EXTRA_WAKE_WORD_DETECTED = "hey_oka_wake_word_detected"
+        private const val PREFS_NAME = "hey_oka_voice"
+        private const val PREF_ENABLED = "wake_word_enabled"
         private const val MODEL_DIRECTORY = "vosk-model-small-en-us-0.15"
         private const val MODEL_ARCHIVE = "vosk-model-small-en-us-0.15.zip"
         private const val MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
