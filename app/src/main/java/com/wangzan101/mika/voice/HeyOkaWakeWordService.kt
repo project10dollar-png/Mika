@@ -221,6 +221,7 @@ class HeyOkaWakeWordService : Service() {
     private fun showWakeWordNotification() {
         val openApp = Intent(this, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(MainActivity.EXTRA_OPEN_VOICE_CALL, true)
             .putExtra(EXTRA_WAKE_WORD_DETECTED, true)
         val pending = PendingIntent.getActivity(
             this, 3, openApp, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -228,7 +229,7 @@ class HeyOkaWakeWordService : Service() {
         val notification = Notification.Builder(this, ALERT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Hey Oka")
-            .setContentText("Kata pemicu terdeteksi. Ketuk untuk membuka asisten.")
+            .setContentText("Hey Oka terdeteksi. Ketuk untuk memulai percakapan suara.")
             .setAutoCancel(true)
             .setContentIntent(pending)
             .build()
