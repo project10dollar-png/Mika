@@ -10,24 +10,34 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.os.Build
 import android.os.IBinder
-import ai.picovoice.porcupine.PorcupineManager
-import ai.picovoice.porcupine.PorcupineManagerCallback
-import com.wangzan101.mika.BuildConfig
 import com.wangzan101.mika.R
 import com.wangzan101.mika.ui.MainActivity
+import org.json.JSONObject
+import org.vosk.Model
+import org.vosk.Recognizer
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.zip.ZipInputStream
 
 /**
- * Explicitly opt-in wake-word listener.
+ * User-opt-in, offline "Hey Oka" phrase listener.
  *
- * This service never starts itself at boot. Android requires a visible,
- * user-initiated start for microphone foreground services. After a wake word
- * is detected, microphone capture stops and a notification lets the user open Oka.
+ * Vosk's small English model is downloaded once after the user starts this service.
+ * Recognition then runs locally. This is constrained-vocabulary ASR, not a dedicated
+ * neural wake-word detector; keep it opt-in and show the persistent microphone notice.
  */
 class HeyOkaWakeWordService : Service() {
-    private var porcupine: PorcupineManager? = null
-    private var handledWakeWord = false
+    @Volatile private var running = false
+    @Volatile private var recorder: AudioRecord? = null
+    private var worker: Thread? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -37,7 +47,6 @@ class HeyOkaWakeWordService : Service() {
                 stopListening()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
-                return START_NOT_STICKY
             }
             ACTION_START -> startListening(startId)
             else -> {
@@ -49,55 +58,136 @@ class HeyOkaWakeWordService : Service() {
     }
 
     private fun startListening(startId: Int) {
-        if (porcupine != null) return
+        if (running) return
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             stopSelf(startId)
             return
         }
-        if (BuildConfig.PICOVOICE_ACCESS_KEY.isBlank() || !assetExists(KEYWORD_ASSET)) {
-            stopSelf(startId)
-            return
-        }
-
         createNotificationChannels()
         startForeground(
             ONGOING_NOTIFICATION_ID,
-            buildListeningNotification(),
+            buildListeningNotification("Menyiapkan pengenalan suara offline…"),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
         )
+        running = true
+        worker = Thread({ listenLoop(startId) }, "HeyOka-Vosk").apply { start() }
+    }
 
+    private fun listenLoop(startId: Int) {
+        var model: Model? = null
+        var recognizer: Recognizer? = null
         try {
-            porcupine = PorcupineManager.Builder()
-                .setAccessKey(BuildConfig.PICOVOICE_ACCESS_KEY)
-                .setKeywordPath(KEYWORD_ASSET)
-                .setSensitivity(0.55f)
-                .build(this, object : PorcupineManagerCallback {
-                    override fun invoke(keywordIndex: Int) {
-                        if (handledWakeWord) return
-                        handledWakeWord = true
-                        stopListening()
-                        showWakeWordNotification()
-                        stopForeground(STOP_FOREGROUND_REMOVE)
-                        stopSelf()
-                    }
-                })
-            porcupine?.start()
-        } catch (_: Exception) {
-            stopListening()
-            stopForeground(STOP_FOREGROUND_REMOVE)
+            val modelDir = ensureModelDownloaded()
+            if (!running) return
+            model = Model(modelDir.absolutePath)
+            recognizer = Recognizer(model, SAMPLE_RATE.toFloat(), WAKE_GRAMMAR)
+            val minBuffer = AudioRecord.getMinBufferSize(
+                SAMPLE_RATE,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            )
+            check(minBuffer > 0) { "AudioRecord buffer tidak didukung" }
+            val audio = AudioRecord(
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                SAMPLE_RATE,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                maxOf(minBuffer, BUFFER_SIZE * 2)
+            )
+            recorder = audio
+            check(audio.state == AudioRecord.STATE_INITIALIZED) { "Mikrofon tidak dapat diinisialisasi" }
+            audio.startRecording()
+            updateListeningNotification("Offline aktif — ucapkan “Hey Oka”")
+            val buffer = ShortArray(BUFFER_SIZE)
+            while (running) {
+                val count = audio.read(buffer, 0, buffer.size)
+                if (count <= 0) continue
+                val complete = recognizer.acceptWaveForm(buffer, count)
+                val json = if (complete) recognizer.result else recognizer.partialResult
+                if (isWakePhrase(json)) {
+                    running = false
+                    showWakeWordNotification()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    break
+                }
+            }
+        } catch (error: Exception) {
+            if (running) {
+                updateListeningNotification("Gagal: \${error.message ?: "model atau mikrofon tidak tersedia"}")
+            }
+            running = false
             stopSelf(startId)
+        } finally {
+            runCatching { recorder?.stop() }
+            runCatching { recorder?.release() }
+            recorder = null
+            runCatching { recognizer?.close() }
+            runCatching { model?.close() }
         }
     }
 
-    private fun assetExists(path: String): Boolean =
-        runCatching { assets.open(path).close() }.isSuccess
+    private fun isWakePhrase(resultJson: String): Boolean {
+        val text = runCatching { JSONObject(resultJson).optString("text") }.getOrDefault("")
+        val normalized = text.lowercase().replace(Regex("[^a-z ]"), " ").replace(Regex("\\s+"), " ").trim()
+        return normalized == "hey oka" || normalized == "hey okka"
+    }
+
+    /**
+     * Downloads the public Apache-2.0 Vosk mobile model once. The archive is never
+     * committed to the repository and extraction rejects paths outside the model folder.
+     */
+    private fun ensureModelDownloaded(): File {
+        val target = File(filesDir, MODEL_DIRECTORY)
+        if (File(target, "am/final.mdl").isFile && File(target, "conf/mfcc.conf").isFile) return target
+
+        val archive = File(cacheDir, MODEL_ARCHIVE)
+        val connection = (URL(MODEL_URL).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 20_000
+            readTimeout = 60_000
+            instanceFollowRedirects = true
+        }
+        try {
+            connection.connect()
+            check(connection.responseCode in 200..299) { "Unduhan model gagal: HTTP \${connection.responseCode}" }
+            BufferedInputStream(connection.inputStream).use { input ->
+                FileOutputStream(archive).use { output -> input.copyTo(output) }
+            }
+        } finally {
+            connection.disconnect()
+        }
+
+        target.deleteRecursively()
+        target.mkdirs()
+        ZipInputStream(BufferedInputStream(archive.inputStream())).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                val relative = entry.name.substringAfter('/', "")
+                if (relative.isNotBlank()) {
+                    val output = File(target, relative)
+                    val root = target.canonicalFile
+                    check(output.canonicalFile.path.startsWith(root.path + File.separator)) {
+                        "Arsip model memiliki path tidak aman"
+                    }
+                    if (entry.isDirectory) output.mkdirs() else {
+                        output.parentFile?.mkdirs()
+                        FileOutputStream(output).use { zip.copyTo(it) }
+                    }
+                }
+                zip.closeEntry()
+            }
+        }
+        archive.delete()
+        check(File(target, "am/final.mdl").isFile) { "Arsip model tidak lengkap" }
+        return target
+    }
 
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
                 NotificationChannel(CHANNEL_ID, "HEY OKA voice activation", NotificationManager.IMPORTANCE_LOW)
-                    .apply { description = "Visible status while wake-word detection is enabled" }
+                    .apply { description = "Status mikrofon saat aktivasi suara diaktifkan pengguna" }
             )
             manager.createNotificationChannel(
                 NotificationChannel(ALERT_CHANNEL_ID, "HEY OKA activation", NotificationManager.IMPORTANCE_DEFAULT)
@@ -105,11 +195,11 @@ class HeyOkaWakeWordService : Service() {
         }
     }
 
-    private fun buildListeningNotification(): Notification =
+    private fun buildListeningNotification(message: String): Notification =
         Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("HEY OKA aktif")
-            .setContentText("Mikrofon siaga untuk mendeteksi “Hey Oka”")
+            .setContentTitle("HEY OKA siaga")
+            .setContentText(message)
             .setOngoing(true)
             .setCategory(Notification.CATEGORY_SERVICE)
             .addAction(
@@ -122,6 +212,11 @@ class HeyOkaWakeWordService : Service() {
             )
             .build()
 
+    private fun updateListeningNotification(message: String) {
+        getSystemService(NotificationManager::class.java)
+            .notify(ONGOING_NOTIFICATION_ID, buildListeningNotification(message))
+    }
+
     private fun showWakeWordNotification() {
         val openApp = Intent(this, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -132,7 +227,7 @@ class HeyOkaWakeWordService : Service() {
         val notification = Notification.Builder(this, ALERT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Hey Oka")
-            .setContentText("Oka mendengarkan. Ketuk untuk membuka asisten.")
+            .setContentText("Kata pemicu terdeteksi. Ketuk untuk membuka asisten.")
             .setAutoCancel(true)
             .setContentIntent(pending)
             .build()
@@ -140,12 +235,10 @@ class HeyOkaWakeWordService : Service() {
     }
 
     private fun stopListening() {
-        val active = porcupine
-        porcupine = null
-        if (active != null) {
-            runCatching { active.stop() }
-            active.delete()
-        }
+        running = false
+        runCatching { recorder?.stop() }
+        worker?.interrupt()
+        worker = null
     }
 
     override fun onDestroy() {
@@ -157,7 +250,12 @@ class HeyOkaWakeWordService : Service() {
         const val ACTION_START = "com.wangzan101.mika.action.HEY_OKA_WAKE_START"
         const val ACTION_STOP = "com.wangzan101.mika.action.HEY_OKA_WAKE_STOP"
         const val EXTRA_WAKE_WORD_DETECTED = "hey_oka_wake_word_detected"
-        private const val KEYWORD_ASSET = "hey_oka.ppn"
+        private const val MODEL_DIRECTORY = "vosk-model-small-en-us-0.15"
+        private const val MODEL_ARCHIVE = "vosk-model-small-en-us-0.15.zip"
+        private const val MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
+        private const val SAMPLE_RATE = 16_000
+        private const val BUFFER_SIZE = 4_096
+        private const val WAKE_GRAMMAR = """["hey oka"]"""
         private const val CHANNEL_ID = "hey_oka_wake_word"
         private const val ALERT_CHANNEL_ID = "hey_oka_activation"
         private const val ONGOING_NOTIFICATION_ID = 7101
@@ -165,13 +263,16 @@ class HeyOkaWakeWordService : Service() {
 
         /** Call only from a visible Activity after opt-in and microphone permission grant. */
         fun start(context: Context) {
-            val intent = Intent(context, HeyOkaWakeWordService::class.java).setAction(ACTION_START)
-            context.startForegroundService(intent)
+            context.startForegroundService(
+                Intent(context, HeyOkaWakeWordService::class.java).setAction(ACTION_START)
+            )
         }
 
         /** Stop wake-word listening immediately. */
         fun stop(context: Context) {
-            context.startService(Intent(context, HeyOkaWakeWordService::class.java).setAction(ACTION_STOP))
+            context.startService(
+                Intent(context, HeyOkaWakeWordService::class.java).setAction(ACTION_STOP)
+            )
         }
     }
 }
