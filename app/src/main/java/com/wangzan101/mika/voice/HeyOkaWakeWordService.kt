@@ -114,7 +114,7 @@ class HeyOkaWakeWordService : Service() {
             }
         } catch (error: Exception) {
             if (running) {
-                updateListeningNotification("Gagal: \${error.message ?: "model atau mikrofon tidak tersedia"}")
+                updateListeningNotification("Gagal menyiapkan model atau mikrofon")
             }
             running = false
             stopSelf(startId)
@@ -149,7 +149,7 @@ class HeyOkaWakeWordService : Service() {
         }
         try {
             connection.connect()
-            check(connection.responseCode in 200..299) { "Unduhan model gagal: HTTP \${connection.responseCode}" }
+            check(connection.responseCode in 200..299) { "Unduhan model gagal" }
             BufferedInputStream(connection.inputStream).use { input ->
                 FileOutputStream(archive).use { output -> input.copyTo(output) }
             }
