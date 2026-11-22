@@ -75,7 +75,7 @@ import kotlinx.coroutines.withContext
 private const val SHIZUKU_SETUP_GUIDE_URL = "https://shizuku.rikka.app/guide/setup/"
 
 /** 设置里能进入的子页面;[Home] 是设置首页,[Advanced] 集中放置连接、维护和工程能力。 */
-private enum class SettingsPage { Home, Advanced, AppAccess, SmsLogin, PhoneOps, Calls, Wechat, DuringWork, AppPace, Capsule, Language, Notifications, Recommendations, Checklists, Workflows, Sandbox, Plugins, EnvVars, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, DeviceDirectories, RunStats, Proactive, Backup }
+private enum class SettingsPage { Home, Advanced, AppAccess, SmsLogin, PhoneOps, Calls, Wechat, DuringWork, AppPace, Capsule, Language, Notifications, Recommendations, Checklists, Workflows, Sandbox, Plugins, EnvVars, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, DeviceDirectories, RunStats, Proactive, Backup, WakeWord }
 
 /**
  * 设置页:总状态卡 + 常用 / 我的数据 / 其他。高级与其他只增加一层,各子页返回来时的页面。
@@ -210,7 +210,7 @@ fun SettingsScreen(
         page = when (page) {
             SettingsPage.RunStats, SettingsPage.DeviceDirectories -> SettingsPage.Developer
             SettingsPage.SelfCheck -> SettingsPage.Recovery
-            SettingsPage.Sandbox, SettingsPage.Recovery, SettingsPage.ComputerAccess,
+            SettingsPage.Sandbox, SettingsPage.Recovery, SettingsPage.WakeWord, SettingsPage.ComputerAccess,
             SettingsPage.McpServers, SettingsPage.Root, SettingsPage.Developer, SettingsPage.EnvVars -> SettingsPage.Advanced
             SettingsPage.AppPace -> SettingsPage.DuringWork
             else -> SettingsPage.Home
@@ -261,6 +261,7 @@ fun SettingsScreen(
             webSearch = webSearch, onOpenWebSearch = { editingSearch = true },
             sandbox = sandboxStatus, onOpenSandbox = { page = SettingsPage.Sandbox },
             pluginsCount = pluginRecords.size, onOpenPlugins = { page = SettingsPage.Plugins },
+            onOpenWakeWord = { page = SettingsPage.WakeWord },
             onOpenEnvVars = { page = SettingsPage.EnvVars },
             showRecovery = status.sdkInt >= Prerequisites.MIN_SDK, onOpenRecovery = { page = SettingsPage.Recovery },
             computerAccess = mcpOn, onOpenComputerAccess = { page = SettingsPage.ComputerAccess },
@@ -270,6 +271,7 @@ fun SettingsScreen(
             onBack = toHome,
             onQuit = { confirmingQuit = true },
         )
+        SettingsPage.WakeWord -> HeyOkaWakeWordSettingsScreen(onBack = toAdvanced)
         SettingsPage.AppAccess -> AppAccessScreen(onBack = toHome)
         SettingsPage.SmsLogin -> SmsLoginSettingsScreen(onBack = toHome)
         SettingsPage.Wechat -> WechatSettingsScreen(wechat, onBack = toHome)
@@ -594,6 +596,7 @@ fun AdvancedSettingsContent(
     onOpenSandbox: () -> Unit = {},
     pluginsCount: Int? = null,
     onOpenPlugins: () -> Unit = {},
+    onOpenWakeWord: () -> Unit = {},
     onOpenEnvVars: () -> Unit = {},
     showRecovery: Boolean = true,
     onOpenRecovery: () -> Unit = {},
@@ -610,6 +613,10 @@ fun AdvancedSettingsContent(
 ) {
     PageScaffold(stringResource(R.string.settings_advanced), onBack) {
         val sandboxRow = sandbox?.takeIf { it !is SandboxStatus.Unsupported }
+        GroupLabel("HEY OKA")
+        GroupCard {
+            ListRow(MikaIcons.Spark, "Aktivasi suara", "Panggil Oka dengan kata “Hey Oka”", first = true, onClick = onOpenWakeWord) { RowChevron() }
+        }
         if (computerAccess != null || mcpServersCount != null || pluginsCount != null || showRoot) {
             GroupLabel(stringResource(R.string.settings_extensions))
             GroupCard {
