@@ -18,7 +18,7 @@
     <string name="calls_summary_done">Done</string>
     <string name="calls_summary_unknown">Unknown</string>
     <string name="app_name" translatable="false">HEY OKA</string>
-    <string name="a11y_service_description">This system permission lets Mika read and operate what\'s on any screen. Mika uses it only on its own virtual screen to do the tasks you give it, and acts on your main screen only when you hand it a task there.</string>
+    <string name="a11y_service_description">This system permission lets HEY OKA read and operate what\'s on any screen. HEY OKA uses it only on its own virtual screen to do the tasks you give it, and acts on your main screen only when you hand it a task there.</string>
     <string name="channel_attention">Needs you</string>
     <string name="takeover_title">Needs you</string>
     <string name="takeover_title_reason">Needs you: %1$s</string>
