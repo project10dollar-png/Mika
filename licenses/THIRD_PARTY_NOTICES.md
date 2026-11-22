@@ -320,3 +320,11 @@ THE SOFTWARE.
 - Artifact: `com.alphacephei:vosk-android:0.3.75`
 - License: Apache-2.0.
 - Usage: Offline speech recognition on Android for the opt-in HEY OKA voice activation service. The Vosk small English model is downloaded on first use from https://alphacephei.com/vosk/models and is not committed to this repository.
+
+
+## Java Native Access (JNA)
+
+- Project: https://github.com/java-native-access/jna
+- Artifact: `net.java.dev.jna:jna:5.18.1` (Android AAR).
+- License: dual-licensed Apache-2.0 or LGPL-2.1-or-later; this project uses the Apache-2.0 option.
+- Usage: Native bridge required by the Vosk Android AAR.
