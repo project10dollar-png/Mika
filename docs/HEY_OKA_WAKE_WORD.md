@@ -7,14 +7,14 @@ This branch replaces the Picovoice/Porcupine dependency with Vosk Android. No Pi
 - The user explicitly starts the microphone foreground service from a visible Activity after granting microphone permission.
 - On first use, the app downloads the public `vosk-model-small-en-us-0.15` model (about 40 MB) from the Vosk model host and extracts it into app-private storage.
 - The phrase grammar is constrained to the English acoustic equivalent `hey okay` (the intended spoken trigger is “Hey Oka”); subsequent recognition runs locally without internet.
-- When the phrase is recognized, listening stops and an Android notification offers to open HEY OKA.
+- When the phrase is recognized, listening stops and an Android notification offers to start the existing live voice conversation. Tapping it sends `EXTRA_OPEN_VOICE_CALL` to `MainActivity`, which signals the existing `VoiceCallHost`; its normal permission and provider-configuration gates remain in force.
 - A persistent notification includes a **Matikan** action. The service does not auto-start at boot.
 
 ## Important limitations
 
 Vosk is offline speech recognition with grammar constraints, not a dedicated low-power wake-word detector. Continuous microphone capture can consume battery and may be less accurate at recognizing a short custom phrase such as “Hey Oka”. The initial model download requires internet; after successful download, recognition itself is offline.
 
-A user-facing settings toggle is now available under Settings → Advanced → HEY OKA → Aktivasi suara. Direct handoff into the chat voice session, model download progress/retry UI, and real-device testing are still required before calling the feature production-ready.
+A user-facing settings toggle is now available under Settings → Advanced → HEY OKA → Aktivasi suara. Model download progress/retry UI and real-device testing are still required before calling the feature production-ready. Android requires the user to tap the notification; the app does not launch a microphone conversation unexpectedly from the background.
 
 ## Model and license
 
