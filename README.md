@@ -1,12 +1,14 @@
 <div align="center">
 
-<img src="docs/media/logo.png" alt="Mika" width="88" />
+<img src="docs/media/logo.png" alt="HEY OKA" width="88" />
 
-# Mika
+# HEY OKA
 
-**An AI assistant on your phone: say what you need, and it works your apps and the web until it's done.**
+**Your personal AI assistant for Android. Tell Oka what you need, and it can work across your apps and the web.**
 
-It works on a hidden background screen, so you can keep using your phone.
+HEY OKA is a personalized fork of [Mika](https://github.com/wangzan101/Mika), preserving its Android agent foundation while its identity, interface and voice experience are being customized. The upstream project remains credited and its Apache-2.0 license is retained.
+
+> **Development status:** This fork is being rebranded. The current voice input is hold-to-talk; the always-listening wake phrase “Hey Oka” is not implemented yet.
 
 <a href="https://github.com/wangzan101/Mika"><img src="docs/media/star-banner-v2.png" alt="Like Mika? Give it a star — click Star in the top-right corner" width="620" /></a>
 
@@ -64,7 +66,7 @@ English · [简体中文](docs/readme/README.zh-CN.md) · [繁體中文](docs/re
 
 </details>
 
-<sub>Several demos use apps popular in China: WeChat is the main messaging app there, and Xiaohongshu (RED) is a lifestyle and social platform. Mika isn't tied to them; it works with any app or website on your phone.</sub>
+<sub>Several demos use apps popular in China: WeChat is the main messaging app there, and Xiaohongshu (RED) is a lifestyle and social platform. HEY OKA isn't tied to them; it works with any app or website on your phone.</sub>
 
 ## Why Mika
 
