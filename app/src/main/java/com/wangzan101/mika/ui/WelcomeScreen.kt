@@ -42,7 +42,7 @@ import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaRadius
 
-/** 上手第一步:说清 Mika 是什么、能做哪几类事,开始前要做的两件事和大概时间。 */
+/** 上手第一步:说清 Oka 是什么、能做哪几类事,开始前要做的两件事和大概时间。 */
 @Composable
 fun WelcomeScreen(onStart: () -> Unit) {
     val c = MikaTheme.colors
@@ -51,7 +51,7 @@ fun WelcomeScreen(onStart: () -> Unit) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
                 Column(Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
-                        painterResource(R.drawable.mika_launcher_art), null,
+                        painterResource(R.drawable.oka_avatar), null,
                         Modifier.size(76.dp).shadow(14.dp, LogoShape, clip = false).clip(LogoShape),
                         contentScale = ContentScale.Crop,
                     )
