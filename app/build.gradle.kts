@@ -122,6 +122,7 @@ dependencies {
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
     // Offline speech recognition; model downloads once on first opt-in.
+    implementation(libs.jna)
     implementation(libs.vosk.android)
 
     testImplementation(libs.junit)
