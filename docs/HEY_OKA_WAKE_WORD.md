@@ -14,7 +14,7 @@ This branch replaces the Picovoice/Porcupine dependency with Vosk Android. No Pi
 
 Vosk is offline speech recognition with grammar constraints, not a dedicated low-power wake-word detector. Continuous microphone capture can consume battery and may be less accurate at recognizing a short custom phrase such as “Hey Oka”. The initial model download requires internet; after successful download, recognition itself is offline.
 
-The current service is a technical foundation. A user-facing settings toggle, direct handoff into the chat voice session, model download progress/retry UI, and real-device testing are still required before calling the feature production-ready.
+A user-facing settings toggle is now available under Settings → Advanced → HEY OKA → Aktivasi suara. Direct handoff into the chat voice session, model download progress/retry UI, and real-device testing are still required before calling the feature production-ready.
 
 ## Model and license
 
