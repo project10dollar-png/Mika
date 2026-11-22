@@ -575,6 +575,7 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
                 .onFailure { Log.w("MikaImport", "Could not clean device import staging", it) }
         }
         // 界面以外的文字(通知、服务、悬浮胶囊)按 App 语言取
+        AppLanguage.initializeDefault(this)
         AppLanguage.applyDefaultLocale(this)
         UiText.source = ResourceTexts { AppLanguage.resources(this) }
         teach = TeachRuntime(this, taskState)
