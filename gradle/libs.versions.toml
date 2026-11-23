@@ -56,8 +56,8 @@ zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
-vosk-android = { module = "com.alphacephei:vosk-android@aar", version.ref = "vosk" }
-jna = { module = "net.java.dev.jna:jna@aar", version.ref = "jna" }
+vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "vosk" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 
 [plugins]
 protobuf = { id = "com.google.protobuf", version = "0.9.5" }
