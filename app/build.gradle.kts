@@ -121,22 +121,10 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
-    // Offline speech recognition; request Android AAR artifacts explicitly.
-    // Version catalogs store coordinates only; artifact type belongs in the dependency declaration.
-    implementation(libs.jna) {
-        isTransitive = false
-        artifact {
-            name = "jna"
-            type = "aar"
-        }
-    }
-    implementation(libs.vosk.android) {
-        isTransitive = false
-        artifact {
-            name = "vosk-android"
-            type = "aar"
-        }
-    }
+    // Offline speech recognition. @aar selects the Android archive itself;
+    // an artifact{} block would add an AAR alongside the default JAR and duplicate JNA classes.
+    implementation("net.java.dev.jna:jna:${libs.versions.jna.get()}@aar")
+    implementation("com.alphacephei:vosk-android:${libs.versions.vosk.get()}@aar")
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
