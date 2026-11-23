@@ -1,6 +1,12 @@
 package com.wangzan101.mika.ui
 
 import com.wangzan101.mika.i18n.tr
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +24,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -42,17 +50,27 @@ import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaRadius
 
-/** 上手第一步:说清 Mika 是什么、能做哪几类事,开始前要做的两件事和大概时间。 */
+/** 上手第一步:说清 Oka 是什么、能做哪几类事,开始前要做的两件事和大概时间。 */
 @Composable
 fun WelcomeScreen(onStart: () -> Unit) {
     val c = MikaTheme.colors
+    val avatarTransition = rememberInfiniteTransition(label = "oka-avatar")
+    val avatarScale by avatarTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.035f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "oka-avatar-breathe",
+    )
     PageBackground {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).windowInsetsPadding(WindowInsets.navigationBars)) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
                 Column(Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
-                        painterResource(R.drawable.mika_launcher_art), null,
-                        Modifier.size(76.dp).shadow(14.dp, LogoShape, clip = false).clip(LogoShape),
+                        painterResource(R.drawable.oka_avatar), null,
+                        Modifier.size(76.dp).graphicsLayer { scaleX = avatarScale; scaleY = avatarScale }.shadow(14.dp, LogoShape, clip = false).clip(LogoShape),
                         contentScale = ContentScale.Crop,
                     )
                     Text(WelcomeCopy.TITLE, Modifier.padding(top = 20.dp), style = MikaType.LargeTitle, color = c.ink, textAlign = TextAlign.Center)

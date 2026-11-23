@@ -312,3 +312,19 @@ THE SOFTWARE.
 - Source: https://www.npmjs.com/package/simple-icons（Simple Icons, 钉死版本 16.38.1 + 14.11.0）
 - License: CC0 1.0（图标字形本体）;各品牌标志（GitHub、Slack、OpenAI、Google、Notion 等）仍归各自品牌所有,仅在此用于「可连接的服务」标识。
 - Usage: `app/src/main/assets/mcp/mcp-logos.json` 里的品牌轮廓 path 与官方品牌色,由 `tools/mcp/build_logos.py` 生成,供 `McpLogos` 在服务目录/列表/管理页渲染为自着色矢量图标。
+
+
+## Vosk Android
+
+- Project: https://github.com/alphacep/vosk-api
+- Artifact: `com.alphacephei:vosk-android:0.3.75`
+- License: Apache-2.0.
+- Usage: Offline speech recognition on Android for the opt-in HEY OKA voice activation service. The Vosk small English model is downloaded on first use from https://alphacephei.com/vosk/models and is not committed to this repository.
+
+
+## Java Native Access (JNA)
+
+- Project: https://github.com/java-native-access/jna
+- Artifact: `net.java.dev.jna:jna:5.18.1` (Android AAR).
+- License: dual-licensed Apache-2.0 or LGPL-2.1-or-later; this project uses the Apache-2.0 option.
+- Usage: Native bridge required by the Vosk Android AAR.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="welcome_title">Hai, saya Mika</string>
+    <string name="welcome_title">Hai, saya Oka</string>
     <string name="welcome_lead">Asisten pribadi di ponsel Anda.\nBilang saja apa yang harus dikerjakan, dan saya selesaikan di latar belakang.</string>
     <string name="welcome_note">Sebelum mulai: atur model dan aktifkan kontrol ponsel. Sekitar 3 menit.</string>
     <string name="welcome_start">Mulai</string>
@@ -16,7 +16,7 @@
     <string name="hide">Sembunyikan</string>
     <string name="show">Tampilkan</string>
     <string name="model_setup_title">Atur model</string>
-    <string name="model_setup_lead">Mika berpikir dengan layanan model Anda sendiri. Hubungkan penyedia dulu, lalu pilih model untuk setiap tugas.</string>
+    <string name="model_setup_lead">Oka berpikir dengan layanan model Anda sendiri. Hubungkan penyedia dulu, lalu pilih model untuk setiap tugas.</string>
     <string name="model_setup_onboarding_note">Hanya model utama yang wajib; dua lainnya bisa menyusul.</string>
     <string name="model_kind">Jenis API</string>
     <string name="model_base_url">URL dasar</string>

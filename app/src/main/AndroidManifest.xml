@@ -284,6 +284,12 @@
 
         <receiver android:name=".calls.CallNotificationAction" android:exported="false" />
 
+        <!-- HEY OKA wake-word listener: explicitly enabled microphone foreground service. -->
+        <service
+            android:name=".voice.HeyOkaWakeWordService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+
         <!-- 应用内语音通话:通话期间撑住进程与后台麦克风;通知带挂断动作,锁屏时不打开通话页。 -->
         <service
             android:name=".voicecall.VoiceCallService"

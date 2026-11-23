@@ -43,6 +43,23 @@ enum class AppLanguage(val tag: String?, val speechTag: String?) {
         private const val KEY_TAG = "tag"
         private const val KEY_PROMPTED = "language_prompted"
 
+        /** Set Indonesian on a fresh install; preserve any language the user has already chosen. */
+        fun initializeDefault(context: Context) {
+            if (hasPrompted(context)) return
+            if (systemManaged) {
+                val manager = context.getSystemService(LocaleManager::class.java)
+                if (manager.applicationLocales.isEmpty) {
+                    manager.applicationLocales = LocaleList.forLanguageTags("id")
+                }
+                return
+            }
+            context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putString(KEY_TAG, "id").commit()
+            legacyTag = "id"
+            legacyLoaded = true
+            cached = null
+        }
+
         /** 是否已经向用户展示过初次/更新语言选择提示。 */
         fun hasPrompted(context: Context): Boolean =
             context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_PROMPTED, false)
