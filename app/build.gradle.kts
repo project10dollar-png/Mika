@@ -121,9 +121,22 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
-    // Offline speech recognition; model downloads once on first opt-in.
-    implementation(libs.jna)
-    implementation(libs.vosk.android)
+    // Offline speech recognition; request Android AAR artifacts explicitly.
+    // Version catalogs store coordinates only; artifact type belongs in the dependency declaration.
+    implementation(libs.jna) {
+        isTransitive = false
+        artifact {
+            name = "jna"
+            type = "aar"
+        }
+    }
+    implementation(libs.vosk.android) {
+        isTransitive = false
+        artifact {
+            name = "vosk-android"
+            type = "aar"
+        }
+    }
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
